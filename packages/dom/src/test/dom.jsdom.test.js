@@ -5,6 +5,8 @@ import {
 	isTextField,
 	removeInvalidHTML,
 	isEmpty,
+	documentHasSelection,
+	documentHasUncollapsedSelection,
 } from '../dom';
 import { getPhrasingContentSchema } from '../phrasing-content';
 
@@ -168,6 +170,46 @@ describe( 'DOM', () => {
 			expect( isTextField( document.createElement( 'div' ) ) ).toBe(
 				false
 			);
+		} );
+	} );
+
+	describe( 'selection across an open shadow root', () => {
+		/**
+		 * Mounts a textarea inside an open shadow root and focuses it, so
+		 * that `document.activeElement` is only the host.
+		 *
+		 * @return {HTMLTextAreaElement} The focused textarea.
+		 */
+		function focusShadowTextarea() {
+			const host = document.createElement( 'div' );
+			parent.appendChild( host );
+
+			const textarea = document.createElement( 'textarea' );
+			textarea.value = 'A field inside a shadow root.';
+			host.attachShadow( { mode: 'open' } ).appendChild( textarea );
+			textarea.focus();
+
+			return textarea;
+		}
+
+		it( 'should see a field focused inside an open shadow root', () => {
+			const textarea = focusShadowTextarea();
+
+			// The premise: focus is retargeted to the host, so a check
+			// against `document.activeElement` alone cannot see the field.
+			expect( textarea ).not.toHaveFocus();
+
+			expect( documentHasSelection( document ) ).toBe( true );
+		} );
+
+		it( 'should see an uncollapsed selection inside an open shadow root', () => {
+			const textarea = focusShadowTextarea();
+
+			expect( documentHasUncollapsedSelection( document ) ).toBe( false );
+
+			textarea.setSelectionRange( 0, textarea.value.length );
+
+			expect( documentHasUncollapsedSelection( document ) ).toBe( true );
 		} );
 	} );
 } );

@@ -14,7 +14,11 @@ import { useDispatch, useRegistry, useSelect } from '@wordpress/data';
 import { useRefEffect } from '@wordpress/compose';
 import { store as blockEditorStore } from '../../store';
 import { useNotifyCopy } from '../../utils/use-notify-copy';
-import { setClipboardBlocks, setContentEditableWrapper } from './utils';
+import {
+	getEventTarget,
+	setClipboardBlocks,
+	setContentEditableWrapper,
+} from './utils';
 import { getPasteEventData } from '../../utils/pasting';
 import { getBlockClientId } from '../../utils/dom';
 
@@ -99,13 +103,16 @@ export default function useClipboardHandler() {
 			// But always handle multiple selected blocks.
 			if ( ! hasMultiSelection() ) {
 				const { ownerDocument } = event.target;
+				// The focused field may be inside an open shadow root, where
+				// `ownerDocument.activeElement` is only its host.
+				const focused = getEventTarget( event );
 				// If copying, only consider actual text selection as selection.
 				// Otherwise, any focus on an input field is considered.
 				const hasSelection =
 					event.type === 'copy' || event.type === 'cut'
 						? documentHasUncollapsedSelection( ownerDocument )
 						: documentHasSelection( ownerDocument ) &&
-						  ! ownerDocument.activeElement.isContentEditable;
+						  ! focused.isContentEditable;
 
 				// Let native copy behaviour take over in input fields.
 				if ( hasSelection && ! isWholeSingleBlockCopy ) {

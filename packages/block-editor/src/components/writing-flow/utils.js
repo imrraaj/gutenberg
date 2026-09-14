@@ -14,6 +14,24 @@ import { store as blockEditorStore } from '../../store';
 export const requiresWrapperOnCopy = Symbol( 'requiresWrapperOnCopy' );
 
 /**
+ * Returns the element the event actually originated from. When an event
+ * crosses the boundary of an open shadow root it is retargeted, so
+ * `event.target` reports the shadow host rather than the field the user is
+ * typing in. The first entry of the composed path is the real target.
+ *
+ * Events from a closed shadow root stay retargeted: the composed path stops
+ * at the host, which is what `event.target` already reports.
+ *
+ * @param {Event} event The event.
+ *
+ * @return {EventTarget} The originating target.
+ */
+export function getEventTarget( event ) {
+	const [ target ] = event.composedPath?.() ?? [];
+	return target ?? event.target;
+}
+
+/**
  * Sets the clipboard data for the provided blocks, with both HTML and plain
  * text representations.
  *

@@ -5,6 +5,7 @@
 ### Bug Fixes
 
 -   `focusable.find`: Return linked image-map areas when their mapped image is visible and outside an inert subtree ([#82736](https://github.com/WordPress/gutenberg/pull/82736)).
+-   `documentHasSelection`, `documentHasUncollapsedSelection`: Descend into open shadow roots when resolving the active element, so a field focused inside a shadow root is no longer invisible to these checks ([#82755](https://github.com/WordPress/gutenberg/issues/82755)).
 
 ## 4.55.0 (2026-09-10)
 

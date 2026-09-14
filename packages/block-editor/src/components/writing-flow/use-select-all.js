@@ -8,6 +8,7 @@ import {
 	getBlockClientId,
 	getSelectionEditableElement,
 } from '../../utils/dom';
+import { getEventTarget } from './utils';
 
 export default function useSelectAll() {
 	const { getBlockOrder, getSelectedBlockClientIds, getBlockRootClientId } =
@@ -23,14 +24,18 @@ export default function useSelectAll() {
 
 			const selectedClientIds = getSelectedBlockClientIds();
 			const { ownerDocument } = node;
+			// Not `event.target`: an event from inside an open shadow root is
+			// retargeted to its host, which would hide the field the user is
+			// typing in and escalate to a block selection.
+			const target = getEventTarget( event );
 			const selection = ownerDocument.defaultView.getSelection();
 			// When the wrapper is contentEditable and holds focus (the
 			// selected block supports `editableRoot`), the event targets the
 			// wrapper; resolve the editable element containing the selection.
 			const editable =
-				( event.target === node &&
+				( target === node &&
 					getSelectionEditableElement( selection, node ) ) ||
-				event.target;
+				target;
 
 			if (
 				selectedClientIds.length < 2 &&
@@ -40,7 +45,7 @@ export default function useSelectAll() {
 				// would select the entire canvas. Select the contents of the
 				// editable element instead, like the default does when the
 				// element itself holds focus.
-				if ( event.target === node && editable !== node ) {
+				if ( target === node && editable !== node ) {
 					event.preventDefault();
 					const range = ownerDocument.createRange();
 					range.selectNodeContents( editable );
